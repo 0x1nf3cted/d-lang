@@ -1,0 +1,83 @@
+
+@macro: (x, y) -> 
+
+const BOARD_WIDTH = 10
+const BOARD_HEIGHT = 20
+
+# Define tetromino shapes:
+type Tetromino =
+| null
+| TetrominoJ of <<bool, 4>, 4>
+
+
+# Tetromino shapes
+set TETROMINO_I: Tetromino = [
+    [false, false, false, false],
+    [true, true, true, true],
+    [false, false, false, false],
+    [false, false, false, false]
+]
+
+set TETROMINO_J: Tetromino = [
+    [true, false, false, false],
+    [true, true, true, false],
+    [false, false, false, false],
+    [false, false, false, false]
+]
+
+# Function to rotate a tetromino clockwise
+fn rotate_clockwise(tetromino: Tetromino) -> Tetromino {
+    // Implementation to rotate the tetromino clockwise
+    // (omitted for brevity)
+}
+
+# Function to move a tetromino left
+@global fn move_left(tetromino: Tetromino) -> Tetromino {
+    // Implementation to move the tetromino left
+    // (omitted for brevity)
+}
+
+# Function to move a tetromino right
+fn move_right(tetromino: Tetromino) -> Tetromino {
+    // Implementation to move the tetromino right
+    // (omitted for brevity)
+}
+
+# Function to check if a tetromino can be placed at a given position on the board
+@rec fn can_place(board: <<bool, BOARD_WIDTH>, BOARD_HEIGHT>, tetromino: Tetromino, row: usize, col: usize) -> bool {
+    // Implementation to check if a tetromino can be placed at a given position on the board
+    // (omitted for brevity)
+}
+
+# Function to place a tetromino on the board
+@inline fn place(board: &mut <<bool, BOARD_WIDTH>, BOARD_HEIGHT>, tetromino: Tetromino, row: usize, col: usize) {
+    // Implementation to place a tetromino on the board
+    // (omitted for brevity)
+}
+
+# Function to check and clear completed rows
+fn clear_rows(board: &mut <<bool, BOARD_WIDTH>, BOARD_HEIGHT>) {
+    // Implementation to check and clear completed rows
+    // (omitted for brevity)
+}
+
+# Function to display the game board
+fn display_board(board: <<bool, BOARD_WIDTH>, BOARD_HEIGHT>) {
+    // Implementation to display the game board
+    // (omitted for brevity)
+}
+
+# Main function:
+@main fn main = () {
+
+    set board: <<bool, BOARD_WIDTH>, BOARD_HEIGHT>= [[false; BOARD_WIDTH]; BOARD_HEIGHT]
+    
+    // Game loop
+    loop {
+        // cannot initialize variables here
+        // cannot alocate nor free memory here
+        // cannot call recursive functions here
+        
+        break
+    }
+}
