@@ -2,6 +2,8 @@
 #define _GNU_SOURCE
 
 #include "lexer.h"
+#include "parser.h"
+#include "syntax.h"
 
 char *read_file(char *filePath)
 {
@@ -157,6 +159,26 @@ void printTokens(Token **tokens, int numTokens)
         case For:
             typeString = "For";
             break;
+
+        case AssignPlus:
+            typeString = "AssignPlus";
+            break;
+        case AssignMinus:
+            typeString = "AssignMinus";
+            break;
+        case AssignMultiply:
+            typeString = "AssignMultiply";
+            break;
+        case AssignDivide:
+            typeString = "AssignDivide";
+            break;
+        case AssignPow:
+            typeString = "AssignPow";
+            break;
+        case AssignModulo:
+            typeString = "AssignModulo";
+            break;
+
         case VariableDefinition:
             typeString = "VariableDefinition";
             break;
@@ -184,6 +206,44 @@ void printTokens(Token **tokens, int numTokens)
         case Or:
             typeString = "Or";
             break;
+        case Point:
+            typeString = "Point";
+            break; // we will consider a delimiter for now
+
+        case UnsignedInteger8:
+            typeString = "UnsignedInteger8";
+            break;
+        case UnsignedInteger16:
+            typeString = "UnsignedInteger8";
+            break;
+        case UnsignedInteger32:
+            typeString = "UnsignedInteger32";
+            break;
+        case UnsignedInteger64:
+            typeString = "UnsignedInteger64";
+            break;
+        case UnsignedInteger128:
+            typeString = "UnsignedInteger128";
+            break;
+        case SignedInteger8:
+            typeString = "SignedInteger8";
+            break;
+        case SignedInteger16:
+            typeString = "SignedInteger116";
+            break;
+        case SignedInteger32:
+            typeString = "SignedInteger32";
+            break;
+        case SignedInteger64:
+            typeString = "SignedInteger64";
+            break;
+        case SignedInteger128:
+            typeString = "SignedInteger128";
+            break;
+        case Character:
+            typeString = "Character";
+            break;
+
         case DoubleEquals:
             typeString = "DoubleEquals";
             break;
@@ -215,6 +275,8 @@ int main(int argc, char const *argv[])
     char *filepath;
     int numLines;
     Content **fileContent;
+    parser_error_t *errors = (parser_error_t *)malloc(sizeof(parser_error_t));
+    errors->error_nb = 0;
     if (argc >= 2)
     {
         filepath = malloc(sizeof(strlen(argv[1]) + 4));
@@ -223,9 +285,10 @@ int main(int argc, char const *argv[])
         free(filepath);
         if (fileContent != NULL)
         {
-            int numTokens;
-            Token **tokens = tokenize(fileContent, numLines, &numTokens);
-            printTokens(tokens, numTokens);
+            int num_tokens;
+            Token **tokens = tokenize(fileContent, numLines, &num_tokens);
+            // printTokens(tokens, num_tokens);
+            parse(tokens, num_tokens);
             free(fileContent);
         }
         free(filepath);

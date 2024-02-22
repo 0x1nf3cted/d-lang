@@ -8,6 +8,8 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g")
 set(SOURCE_FILES
     src/main.c
     src/lexer.c
+    src/parser.c
+    src/syntax.c
 )
 
 add_executable(dzair ${SOURCE_FILES})

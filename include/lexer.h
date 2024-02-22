@@ -8,10 +8,6 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -35,7 +31,6 @@ typedef enum
     BracketOpen,
     BracketClose,
     BraceOpen,
-    // add the rest of the token types
     BraceClose,
     ParenthesisOpen,
     ParenthesisClose,
@@ -57,13 +52,34 @@ typedef enum
     MathPipe,
     Identifier,
     MacroArrow,
+    Point,
     LessThan,
     GreaterOrEqual,
     LessOrEqual,
     Number,
+    Character,
+
+    AssignPlus,
+    AssignMinus,
+    AssignMultiply,
+    AssignDivide,
+    AssignPow,
+    AssignModulo,
+    UnsignedInteger8,
+    UnsignedInteger16,
+    UnsignedInteger32,
+    UnsignedInteger64,
+    UnsignedInteger128,
+    SignedInteger8,
+    SignedInteger16,
+    SignedInteger32,
+    SignedInteger64,
+    SignedInteger128,
+    Power,
     Word,
     Colon,
     Not,
+    DataType,
     While,
     ExtremeCase,
     FunctionKeword,
@@ -107,13 +123,13 @@ typedef struct
 } Token;
 
 #define IS_DELIMITER(CH) ( \
-    (CH) == '(' || (CH) == ')' || (CH) == '[' || (CH) == ']' || (CH) == '{' || (CH) == '}' || (CH) == ',' || (CH) == '|' ||(CH) == '*' || (CH) == '_' || (CH) == ';' || (CH) == ':' || (CH) == '&')
+    (CH) == '(' || (CH) == ')' || (CH) == '[' || (CH) == ']' || (CH) == '{' || (CH) == '}' || (CH) == ',' || (CH) == '|' || (CH) == '_' || (CH) == ';' || (CH) == ':' || (CH) == '&' || (CH) == '.')
 
 #define IS_OPERATOR(CH) ( \
-    (CH) == '+' || (CH) == '-' || (CH) == '*' || (CH) == '/' || (CH) == '%')
+    (CH) == '+' || (CH) == '-' || (CH) == '*' || (CH) == '/' || (CH) == '%' || (CH) == '=')
 
 #define IS_COMPARATOR(CH) ( \
-    (CH) == '=' || (CH) == '<' || (CH) == '>' || (CH) == '!')
+    (CH) == '<' || (CH) == '>' || (CH) == '!')
 
 #include <string.h>
 
@@ -132,12 +148,44 @@ typedef struct
     strcmp(CH, "while") == 0 ||    \
     strcmp(CH, "null") == 0 ||     \
     strcmp(CH, "of") == 0 ||       \
-    strcmp(CH, "true") == 0 ||     \
-    strcmp(CH, "false") == 0 ||    \
     strcmp(CH, "return") == 0 ||   \
     strcmp(CH, "continue") == 0 || \
     strcmp(CH, "none") == 0 ||     \
     strcmp(CH, "set") == 0)
+
+
+#define IS_TYPE(CH) (           \
+    CH == UnsignedInteger8 ||   \
+    CH == UnsignedInteger16 ||  \
+    CH == UnsignedInteger32 ||  \
+    CH == UnsignedInteger64 ||  \
+    CH == UnsignedInteger128 || \
+    CH == SignedInteger8 ||     \
+    CH == SignedInteger16 ||    \
+    CH == SignedInteger32 ||    \
+    CH == SignedInteger64 ||    \
+    CH == SignedInteger128 ||   \
+    CH == String ||             \
+    CH == True ||               \
+    CH == False ||              \
+    CH == Character)
+
+#define IS_DATATYPE(CH) (strcmp(CH, "char") == 0 || \
+                         strcmp(CH, "str") == 0 ||  \
+                         strcmp(CH, "u8") == 0 ||   \
+                         strcmp(CH, "u16") == 0 ||  \
+                         strcmp(CH, "u32") == 0 ||  \
+                         strcmp(CH, "u64") == 0 ||  \
+                         strcmp(CH, "u128") == 0 || \
+                         strcmp(CH, "f32") == 0 ||  \
+                         strcmp(CH, "f64") == 0 ||  \
+                         strcmp(CH, "i8") == 0 ||   \
+                         strcmp(CH, "i16") == 0 ||  \
+                         strcmp(CH, "i32") == 0 ||  \
+                         strcmp(CH, "i64") == 0 ||  \
+                         strcmp(CH, "i128") == 0 || \
+                         strcmp(CH, "true") == 0 || \
+                         strcmp(CH, "false") == 0)
 
 #define FREE_TOKEN(token)     \
     do                        \

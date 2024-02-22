@@ -1,10 +1,15 @@
-set x: *u8;
+set n : u8 = 10;
+set a: *u8 = &n;
 
-set y: u8 = 10;
+n = 10;
+n++;
+n += 1;
+n -= 1;
+n *= 1;
+n /= 1;
+n **= 2;
+n %= 2;
 
-x= &y;
+set n : u8 = 10;
 
-set a: u8 = *x;
-
-
-
+set a : u16;

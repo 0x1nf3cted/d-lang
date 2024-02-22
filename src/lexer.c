@@ -78,11 +78,67 @@ TokenType get_token_kind(char *lexeme, uint16_t length)
     {
         return VariableDefinition;
     }
-    else if (strncmp(lexeme, "true", length) == 0)
+    else
+    {
+        return Word;
+    }
+}
+
+TokenType get_token_datatype(char *lexeme, uint16_t length)
+{
+    if (strcmp(lexeme, "char") == 0)
+    {
+        return Character;
+    }
+    else if (strcmp(lexeme, "str") == 0)
+    {
+        return String;
+    }
+    else if (strcmp(lexeme, "u8") == 0)
+    {
+        return UnsignedInteger8;
+    }
+    else if (strcmp(lexeme, "u16") == 0)
+    {
+        return UnsignedInteger16;
+    }
+    else if (strcmp(lexeme, "u32") == 0)
+    {
+        return UnsignedInteger32;
+    }
+    else if (strcmp(lexeme, "u64") == 0)
+    {
+        return UnsignedInteger64;
+    }
+    else if (strcmp(lexeme, "u128") == 0)
+    {
+        return UnsignedInteger128;
+    }
+    else if (strcmp(lexeme, "i8") == 0)
+    {
+        return SignedInteger8;
+    }
+    else if (strcmp(lexeme, "i16") == 0)
+    {
+        return SignedInteger16;
+    }
+    else if (strcmp(lexeme, "i32") == 0)
+    {
+        return SignedInteger32;
+    }
+    else if (strcmp(lexeme, "i64") == 0)
+    {
+        return SignedInteger64;
+    }
+    else if (strcmp(lexeme, "i128") == 0)
+    {
+        return SignedInteger128;
+    }
+    else if (strcmp(lexeme, "true") == 0)
     {
         return True;
     }
-    else if (strncmp(lexeme, "false", length) == 0)
+    else if (strcmp(lexeme, "false") == 0)
     {
         return False;
     }
@@ -123,8 +179,9 @@ TokenType get_delimiter_type(char currentChar)
     case ',':
         return Comma;
         break;
-    case '*':
-        return Star;
+
+    case '.':
+        return Point;
         break;
     case '!':
         return Not;
@@ -145,7 +202,8 @@ TokenType get_operator_type(char lexeme)
 {
     switch (lexeme)
     {
-
+    case '*':
+        return Star;
     case '+':
         return Plus;
     case '-':
@@ -154,7 +212,6 @@ TokenType get_operator_type(char lexeme)
         return Ampersand;
     case '=':
         return Equals;
-
     default:
         return None;
     }
@@ -195,17 +252,91 @@ Token **tokenize(Content **input, int numLines, int *numTokens)
                 index++;
                 continue;
             }
-
             if (IS_OPERATOR(currentChar))
             {
                 TokenType type = get_operator_type(currentChar);
+
                 buffer[bufferIndex++] = currentChar;
 
-                if (input[i]->lineContent[index] == '-' && input[i]->lineContent[index + 1] == '>')
+                // Check for compound assignment operators
+                if (input[i]->lineContent[index] == '=' && input[i]->lineContent[index + 1] == '=')
+                {
+                    type = DoubleEquals;
+                    buffer[bufferIndex++] = '=';
+                    index++;
+                }
+                else if (input[i]->lineContent[index] == '-' && input[i]->lineContent[index + 1] == '>')
                 {
                     type = MacroArrow;
                     buffer[bufferIndex++] = '>';
                     index++;
+                }
+                else
+                {
+                    switch (input[i]->lineContent[index])
+                    {
+                    case '-':
+                        if (input[i]->lineContent[index + 1] == '=')
+                        {
+                            type = AssignMinus;
+                            buffer[bufferIndex++] = '=';
+                            index++;
+                        }
+                        break;
+                    case '+':
+                        if (input[i]->lineContent[index + 1] == '=')
+                        {
+                            type = AssignPlus;
+                            buffer[bufferIndex++] = '=';
+                            index++;
+                        }
+                        break;
+                    case '*':
+                        if (input[i]->lineContent[index + 1] == '=')
+                        {
+                            type = AssignMultiply;
+                            buffer[bufferIndex++] = '=';
+                            index++;
+                        }
+                        else if (input[i]->lineContent[index + 1] == '*')
+                        {
+                            buffer[bufferIndex++] = '*';
+                            index++;
+                            if (input[i]->lineContent[index + 1] == '=')
+                            {
+                                type = AssignPow;
+                                buffer[bufferIndex++] = '=';
+                                index++;
+                            }
+                            else
+                            {
+                                type = Power;
+                            }
+                        }
+                        else
+                        {
+                            type = Star;
+                        }
+                        break;
+                    case '/':
+                        if (input[i]->lineContent[index + 1] == '=')
+                        {
+                            type = AssignDivide;
+                            buffer[bufferIndex++] = '=';
+                            index++;
+                        }
+                        break;
+                    case '%':
+                        if (input[i]->lineContent[index + 1] == '=')
+                        {
+                            type = AssignModulo;
+                            buffer[bufferIndex++] = '=';
+                            index++;
+                        }
+                        break;
+                    default:
+                        break;
+                    }
                 }
 
                 buffer[bufferIndex] = '\0'; // Null-terminate the buffer
@@ -224,26 +355,31 @@ Token **tokenize(Content **input, int numLines, int *numTokens)
                 TokenType type;
                 if (currentChar == '<')
                 {
-                    type = LessThan;
-                }
-                else if (currentChar = '>')
-                {
-                    type = GreaterThan;
-                }
-                buffer[bufferIndex++] = currentChar;
-
-                if (input[i]->lineContent[index + 1] == '=')
-                {
-                    if (input[i]->lineContent[index] == '<')
+                    if (input[i]->lineContent[index] == '=')
                     {
                         type = LessOrEqual;
                     }
-                    else if (input[i]->lineContent[index + 1] == '>')
+                    else
+                    {
+                        type = LessThan;
+                    }
+                }
+                else if (currentChar = '>')
+                {
+                    if (input[i]->lineContent[index] == '=')
                     {
                         type = GreaterOrEqual;
                     }
+                    else
+                    {
+                        type = GreaterThan;
+                    }
+                }
+                buffer[bufferIndex++] = currentChar;
+                if (input[i]->lineContent[index] == '!' && input[i]->lineContent[index + 1] == '=')
+                {
+                    type = NotEqual;
                     buffer[bufferIndex++] = '=';
-
                     index++;
                 }
                 // if (input[i]->lineContent[index] == '=' && input[i]->lineContent[index + 1] == '>')
@@ -263,7 +399,6 @@ Token **tokenize(Content **input, int numLines, int *numTokens)
                 continue;
             }
 
-            // <= >= == !=
             if (isalpha(currentChar))
             {
                 while (isalnum(input[i]->lineContent[index]) || input[i]->lineContent[index] == '_')
@@ -277,7 +412,10 @@ Token **tokenize(Content **input, int numLines, int *numTokens)
                 {
                     type = get_token_kind(buffer, bufferIndex + 1);
                 }
-
+                else if (IS_DATATYPE(buffer))
+                {
+                    type = get_token_datatype(buffer, bufferIndex + 1);
+                }
                 tokens = realloc(tokens, (*numTokens + 1) * sizeof(Token *));
                 tokens[*numTokens] = createToken(type, buffer, i, index - bufferIndex + 1);
                 (*numTokens)++;
