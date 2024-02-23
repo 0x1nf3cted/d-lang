@@ -2,101 +2,145 @@
 
 #define u32 uint32_t
 
-void parse_value() {}
+static int cursor = 0;
 
-void print_ast(Node *tree)
+void malloc_error(Node *p)
 {
-    printf("Tree\n");
-    for (int i = 0; i < tree->branch_count; i++)
+    if (p == NULL)
     {
-        printf("identifier: %s, address: %d, context: %s, ligne: %d, position: %s", tree[i].data.pointer->identifier,
-               tree[i].data.pointer->address, tree[i].data.pointer->ptr_context, tree[i].line, tree[i].start_position);
-        print_ast(tree[i].data.pointer->referenced_variable);
-        printf("identifier: %s, type: %d, context: %s, ligne: %d, position: %s, parent: %s", tree[i].data.variable->identifier,
-               tree[i].data.variable->variable_type, tree[i].data.variable->var_context, tree[i].line, tree[i].start_position, tree[i].data.variable->parent);
+        fprintf(stderr, "Fatal: failed to allocate memory.\n");
+        abort();
     }
 }
 
-void free_tree(struct Node *tree)
-{
-    for (int i = 0; i < tree->branch_count; i++)
-    {
-        if (tree->children != NULL)
-        {
-            free_tree(tree->children);
-        }
-        if (tree[i].children != NULL)
-        {
-            free_tree(tree[i].children);
-        }
-    }
-    free(tree);
-}
-
-void parse_variable(Token **var_tokens, int buffer_size, struct symbol_tab *tab)
-{
-    // we check there are no syntax error, so we're ready to parse
-
-    if (buffer_size == 5)
-    {
-        if (!check_variable_syntax_error(var_tokens, buffer_size))
-        {
-            // Node *tree = malloc(sizeof(struct Node));
-            // tree->branch_count = 0;
-            // free_tree(tree);
-        }
-    }
-
-    // check_variable_syntax_error(var_tokens, buffer_size);
-    // get_var_info(tree, var_tokens, buffer_size, tab);
-    // print_ast(tree);
-
-    // we're already know the first token will be 'set' and the last is ';' so we parse what's between
-    // for (int i = 0; i < buffer_size; i++)
-    // {
-    //     // printf("token: %s\n", var_tokens[i]->value);
-    // }
-}
-
-Node *make_node(u32 position, u32 line)
+void parse_value()
 {
 }
-Node *parse(Token **tokens, int token_number)
+
+void parse_variable(Token **var_tokens, int buffer_size)
 {
-    struct symbol_tab *tab = (struct symbol_tab *)malloc(sizeof(struct symbol_tab));
-    if (tab == NULL)
+    printf("reached");
+}
+
+Node *make_node(u32 position, u32 line, TokenType)
+{
+    Node *node = (Node *)malloc(sizeof(Node));
+    malloc_error(node);
+    node->branch_count = 0;
+    node->children = 0;
+    node->line = 0;
+    node->start_position = 0;
+    node->type = ROOT,
+    strcpy(node->value, "Root");
+    node->children = NULL;
+}
+
+void append_token(Token **tokens, Token **buffer, int *buffer_s)
+{
+    buffer = realloc(buffer, *(++buffer_s) * sizeof(Token *));
+    buffer[*buffer_s - 1] = tokens[cursor];
+}
+
+Token *get_next_token(Token **tokens, int token_number)
+{
+
+    if (cursor >= token_number)
     {
-        printf("Fatal: Memory allocation error: couldn't allocate space at %d:%d", 0, 0);
-        exit(0);
+        perror("error: eached the end of the file");
+        abort();
     }
-    tab->sym_count = 0;
-    Token **buffer = (Token **)malloc(sizeof(Token *));
-    if (buffer == NULL)
+    return tokens[cursor++];
+}
+
+// will take a node and append to its child or parent the rest of the tree
+Node *parse(Token **tokens, int token_number, Node *ast)
+{
+
+    Token **buffer = malloc(sizeof(Token *));
+    int buffer_s = 0;
+
+    Token *current_token = malloc(sizeof(Token));
+    current_token = get_next_token(tokens, token_number);
+    if (current_token->type == VariableDefinition)
     {
-        printf("Fatal: Memory allocation error: couldn't allocate space at %d:%d", 0, 0);
-        exit(0);
-    }
-    int buffer_size = 0;
-    for (int i = 0; i < token_number; i++)
-    {
-        if (tokens[i]->type == VariableDefinition || (tokens[i]->type == Identifier && tokens[i + 1]->type == Colon && IS_TYPE(tokens[i + 3]->type)))
+        buffer = realloc(buffer, (buffer_s + 1) * sizeof(Token *));
+        buffer[buffer_s++] = current_token;
+        current_token = get_next_token(tokens, token_number);
+
+        if (current_token->type == Identifier)
         {
-            while (strcmp(tokens[i]->value, "=") != 0)
+
+            append_token(tokens, buffer, &buffer_s);
+            current_token = get_next_token(tokens, token_number);
+
+            if (current_token->type == Colon)
             {
-                // printf("val: %s\n", tokens[i]->value);
 
-                buffer = realloc(buffer, (buffer_size + 1) * sizeof(Token *));
-                buffer[buffer_size] = tokens[i];
-                buffer_size++;
-                i++;
+                append_token(tokens, buffer, &buffer_s);
+                current_token = get_next_token(tokens, token_number);
+
+                // we check if it's variable or pointer
+                if (current_token->type == Star)
+                {
+                    append_token(tokens, buffer, &buffer_s);
+                    current_token = get_next_token(tokens, token_number);
+                    if (IS_TYPE(current_token->type))
+                    {
+                        append_token(tokens, buffer, &buffer_s);
+                        current_token = get_next_token(tokens, token_number);
+                        if (current_token->type == Equals)
+                        {
+                            append_token(tokens, buffer, &buffer_s);
+                            current_token = get_next_token(tokens, token_number);
+                            parse_variable(buffer, buffer_s);
+                        }
+                        else
+                        {
+                            fprintf(stderr, "Error: invalid syntax, you forgot the '=' at the variable declaration %d:%d", current_token->value, current_token->lineNumber, current_token->position);
+                            abort();
+                        }
+                    }
+                    else
+                    {
+                        fprintf(stderr, "Error: invalid syntax, %s is not a pointer type %d:%d", current_token->value, current_token->lineNumber, current_token->position);
+                        abort();
+                    }
+                }
+                else if (IS_TYPE(current_token->type))
+                {
+                    append_token(tokens, buffer, &buffer_s);
+                    current_token = get_next_token(tokens, token_number);
+                    if (current_token->type == Equals)
+                    {
+                        append_token(tokens, buffer, &buffer_s);
+                        current_token = get_next_token(tokens, token_number);
+                        parse_variable(buffer, buffer_s);
+                    }
+                    else
+                    {
+                        fprintf(stderr, "Error: invalid syntax, you forgot the '=' at the variable declaration %d:%d", current_token->value, current_token->lineNumber, current_token->position);
+                        abort();
+                    }
+                }
+                else
+                {
+                    fprintf(stderr, "Error: invalid syntax, %s is not a type %d:%d", current_token->value, current_token->lineNumber, current_token->position);
+                    abort();
+                }
             }
-            buffer = realloc(buffer, buffer_size * sizeof(Token *));
-            buffer[buffer_size] = tokens[i];
-            buffer_size++;
-            parse_variable(buffer, buffer_size, tab);
-            buffer_size = 0;
-            free(buffer); // Free the dynamically allocated buffer memory
+            else
+            {
+                fprintf(stderr, "Your forgot to add a colon after the identifier at %d:%d", current_token->lineNumber, current_token->position);
+                abort();
+            }
+        }
+        else
+        {
+            fprintf(stderr, "Not a valid identifier at %d:%d", current_token->lineNumber, current_token->position);
+            abort();
         }
     }
-    return NULL;
+    else
+    {
+    }
 }

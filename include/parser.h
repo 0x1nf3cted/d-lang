@@ -2,23 +2,8 @@
 #define PARSER_H
 
 #include "lexer.h"
-#include "syntax.h"
 
 // Define the Node struct for parsing variables
-
-typedef struct
-{
-    char *msg;
-    char *severity;
-    uint32_t line;
-    uint32_t position;
-    uint32_t error_nb;
-} parser_error_t;
-
-typedef struct
-{
-
-} TraceBack;
 
 typedef enum
 {
@@ -53,14 +38,27 @@ struct symbol_tab
     size_t sym_count;
 };
 
+typedef enum
+{
+    ROOT,
+    VARIABLE_NODE,
+    VARIABLE_ASSIGN_NODE,
+    POINTER_ASSIGN_NODE,
+    POINTER_NODE,
+    INITIALIZE_POINTER_NODE,
+    INITIALIZE_VARIABLE_NODE,
+} NodeType;
+
 typedef struct Node
 {
     union
     {
-        variable_node *variable;
-        pointer_node *pointer;
+        struct Node *variable;
+        struct Node *pointer;
     } data;
-    struct Node* children;
+    char *value;
+    NodeType type;
+    struct Node *children;
     size_t branch_count;
     u_int32_t line;
     u_int32_t start_position;
@@ -68,6 +66,6 @@ typedef struct Node
 
 } Node;
 
-extern Node *parse(Token **tokens, int tokenNumber);
-
+void malloc_error(Node *p);
+Node *parse(Token **tokens, int token_number, Node *ast);
 #endif // PARSER_H

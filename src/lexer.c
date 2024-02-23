@@ -382,12 +382,7 @@ Token **tokenize(Content **input, int numLines, int *numTokens)
                     buffer[bufferIndex++] = '=';
                     index++;
                 }
-                // if (input[i]->lineContent[index] == '=' && input[i]->lineContent[index + 1] == '>')
-                // {
-                //     buffer[bufferIndex++] = '>';
-                //     type = TOKEN_DEFAULT_KEY;
-                //     index++;
-                // }
+
                 buffer[bufferIndex] = '\0'; // Null-terminate the buffer
 
                 tokens = realloc(tokens, (*numTokens + 1) * sizeof(Token *));
