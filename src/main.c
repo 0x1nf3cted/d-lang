@@ -283,6 +283,45 @@ void free_tokens(Token **tokens, int numTokens)
     }
 }
 
+void print_ast(Node *ast, int level)
+{
+    if (strcmp(ast->label, "Root") == 0)
+    {
+        printf("\nNode: %s\n", ast->label);
+    }
+
+    for (int i = 0; i < ast->branch_count; i++)
+    {
+        // Print indentation
+        for (int j = 0; j < level; j++)
+        {
+            printf("\t");
+        }
+
+        if (ast->children[i]->type == INITIALIZE_VARIABLE_NODE)
+        {
+            printf("Node: %s,\n", ast->children[i]->label);
+            for (int j = 0; j <= level; j++)
+            {
+                printf("\t");
+            }
+            printf("identifier: %s,\n", ast->children[i]->data.variable.identifier);
+        }
+        else if (ast->children[i]->type == NUMBER_VALUE)
+        {
+            printf("Node: %s,\n", ast->children[i]->label);
+            for (int j = 0; j <= level; j++)
+            {
+                printf("\t");
+            }
+            printf("value: %s", ast->children[i]->data.value.value);
+        }
+
+        // Recursively print children with increased indentation
+        print_ast(ast->children[i], level + 1);
+    }
+}
+
 int main(int argc, char const *argv[])
 {
 
@@ -313,6 +352,7 @@ int main(int argc, char const *argv[])
             int num_tokens;
             Token **tokens = tokenize(fileContent, numLines, &num_tokens);
             parse(tokens, num_tokens, ast, &cursor);
+            print_ast(ast, 0);
             // printTokens(tokens, num_tokens);
             // free(fileContent);
             free_tokens(tokens, num_tokens);

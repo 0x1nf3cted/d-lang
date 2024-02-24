@@ -24,7 +24,7 @@ Node *parse_value(Token **var_tokens, int buffer_size, Node *ast, int *cursor)
     if (var_tokens[0]->type == Number)
     {
         val_node->type = NUMBER_VALUE;
-        strcpy(val_node->data.value.value, var_tokens[0]->value);
+        val_node->data.value.value = strdup(var_tokens[0]->value);
         val_node->data.value.value_type = UnsignedInteger_8;
         val_node->label = strdup("Litteral value");
         return val_node;
@@ -35,34 +35,6 @@ Node *parse_value(Token **var_tokens, int buffer_size, Node *ast, int *cursor)
     }
 }
 
-// Node* parse_variable(Token **tokens, int token_number, Token **var_tokens, int buffer_size, Node *ast, int *cursor)
-// {
-//     Node *var_node = (Node *)malloc(sizeof(Node));
-//     malloc_error(var_node);
-//     var_node->branch_count = 0;
-//     var_node->children = 0;
-//     var_node->line = var_tokens[0]->lineNumber;
-//     var_node->start_position = var_tokens[0]->position;
-//     var_node->end_position = var_tokens[buffer_size - 1]->position;
-
-//     if (var_tokens[0]->type == VariableDefinition)
-//     {
-//         var_node->type = INITIALIZE_VARIABLE_NODE;
-//         strcpy(var_node->data.variable.identifier, var_tokens[1]->value);
-//         var_node->label = strdup("Variable initialization");
-//     }
-//     else if (var_tokens[0]->type == Identifier)
-//     {
-//         var_node->type = VARIABLE_ASSIGN_NODE;
-
-//         strcpy(var_node->data.variable.identifier, var_tokens[0]->value);
-//         var_node->label = strdup("Variable assignement");
-//     }
-//     ast->children = var_node;
-//     ast->branch_count += 1;
-//     var_node->children = parse(tokens, token_number, ast, cursor);
-//     return var_node
-// }
 Node *parse_variable(Token **tokens, int token_number, Token **var_tokens, int buffer_size, Node *ast, int *cursor)
 {
     Node *var_node = (Node *)malloc(sizeof(Node));
@@ -100,6 +72,7 @@ Node *parse_variable(Token **tokens, int token_number, Token **var_tokens, int b
     malloc_error(var_node->children);
     var_node->children[var_node->branch_count] = parse(tokens, token_number, ast, cursor);
     var_node->branch_count += 1;
+
     return var_node;
 }
 
@@ -255,7 +228,7 @@ Node *parse(Token **tokens, int token_number, Node *ast, int *cursor)
                             printf("Token: %s\n", buffer[i]->value);
                         }
                         ast->children = malloc(sizeof(Node));
-
+                        malloc_error(ast->children);
                         ast->children[ast->branch_count] = parse_variable(tokens, token_number, buffer, buffer_s, ast, cursor);
                         ast->branch_count += 1;
                         parse(tokens, token_number, ast, cursor);
