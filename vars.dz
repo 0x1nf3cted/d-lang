@@ -1,3 +1,2 @@
+set a: u8 = 10;
 set n : *u8 = 10;
-set a: *k = &n;
-

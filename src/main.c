@@ -297,8 +297,11 @@ int main(int argc, char const *argv[])
     ast->start_position = 0;
     ast->type = ROOT,
     // ast->value = malloc(sizeof(char));
-    ast->value = strdup("Root");
+        ast->label = strdup("Root");
     ast->children = NULL;
+
+    int cursor = 0;
+
     if (argc >= 2)
     {
         filepath = malloc(sizeof(strlen(argv[1]) + 4));
@@ -309,9 +312,9 @@ int main(int argc, char const *argv[])
         {
             int num_tokens;
             Token **tokens = tokenize(fileContent, numLines, &num_tokens);
-            parse(tokens, num_tokens, ast);
-            //printTokens(tokens, num_tokens);
-            //free(fileContent);
+            parse(tokens, num_tokens, ast, &cursor);
+            // printTokens(tokens, num_tokens);
+            // free(fileContent);
             free_tokens(tokens, num_tokens);
         }
         free(filepath);

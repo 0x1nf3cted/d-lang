@@ -54,10 +54,7 @@ fn total_area(shapes: <Shape, 10>): f32 {
     }
     return total
 }
-
-
-
-
+ 
 # Main function
 
 @main fn main = () {
