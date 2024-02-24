@@ -166,3 +166,15 @@ expression : IDENTIFIER
            | expression POWER expression
            | expression MODULO expression
            ;
+n = 10;
+n++;
+n += 1;
+n -= 1;
+n *= 1;
+n /= 1;
+n **= 2;
+n %= 2;
+set n : u8 = 10;
+set a : u16;
+
+

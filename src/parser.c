@@ -2,14 +2,20 @@
 
 #define u32 uint32_t
 
-static int cursor = 0;
-
 void malloc_error(Node *p)
 {
     if (p == NULL)
     {
         fprintf(stderr, "Fatal: failed to allocate memory.\n");
         abort();
+    }
+}
+
+void print_buffer(Token **buffer, int buffer_s)
+{
+    for (int i = 0; i < buffer_s - 1; i++)
+    {
+        printf("Token: %s", buffer[i]->value);
     }
 }
 
@@ -35,112 +41,150 @@ Node *make_node(u32 position, u32 line, TokenType)
     node->children = NULL;
 }
 
-void append_token(Token **tokens, Token **buffer, int *buffer_s)
+void append_token(Token **tokens, Token **buffer, int *buffer_s, int *cursor)
 {
-    buffer = realloc(buffer, *(++buffer_s) * sizeof(Token *));
-    buffer[*buffer_s - 1] = tokens[cursor];
+    buffer = realloc(buffer, (*buffer_s) + 1 * sizeof(Token *));
+    if (buffer == NULL)
+    {
+        fprintf(stderr, "Fatal: failed to allocate memory.\n");
+        exit(1);
+    }
+    buffer[(*buffer_s)] = tokens[*cursor];
+    (*buffer_s) += 1;
 }
 
-Token *get_next_token(Token **tokens, int token_number)
+Token *get_next_token(Token **tokens, int token_number, int *cursor)
 {
-
-    if (cursor >= token_number)
+    if (*cursor >= token_number)
     {
-        perror("error: eached the end of the file");
-        abort();
+        perror("error: reached the end of the file");
+        exit(1);
     }
-    return tokens[cursor++];
+    *cursor += 1;
+    return tokens[*cursor - 1];
 }
 
 // will take a node and append to its child or parent the rest of the tree
 Node *parse(Token **tokens, int token_number, Node *ast)
 {
-
+    int cursor = 0;
     Token **buffer = malloc(sizeof(Token *));
     int buffer_s = 0;
 
-    Token *current_token = malloc(sizeof(Token));
-    current_token = get_next_token(tokens, token_number);
+    Token *current_token = get_next_token(tokens, token_number, &cursor);
+
     if (current_token->type == VariableDefinition)
     {
         buffer = realloc(buffer, (buffer_s + 1) * sizeof(Token *));
+        if (buffer == NULL)
+        {
+            fprintf(stderr, "Fatal: failed to allocate memory.\n");
+            exit(1);
+        }
         buffer[buffer_s++] = current_token;
-        current_token = get_next_token(tokens, token_number);
+
+        current_token = get_next_token(tokens, token_number, &cursor);
 
         if (current_token->type == Identifier)
         {
+            buffer = realloc(buffer, (buffer_s + 1) * sizeof(Token *));
+            if (buffer == NULL)
+            {
+                fprintf(stderr, "Fatal: failed to allocate memory.\n");
+                exit(1);
+            }
+            buffer[buffer_s++] = current_token;
 
-            append_token(tokens, buffer, &buffer_s);
-            current_token = get_next_token(tokens, token_number);
+            current_token = get_next_token(tokens, token_number, &cursor);
 
             if (current_token->type == Colon)
             {
+                buffer = realloc(buffer, (buffer_s + 1) * sizeof(Token *));
+                if (buffer == NULL)
+                {
+                    fprintf(stderr, "Fatal: failed to allocate memory.\n");
+                    exit(1);
+                }
+                buffer[buffer_s++] = current_token;
 
-                append_token(tokens, buffer, &buffer_s);
-                current_token = get_next_token(tokens, token_number);
+                current_token = get_next_token(tokens, token_number, &cursor);
 
-                // we check if it's variable or pointer
                 if (current_token->type == Star)
                 {
-                    append_token(tokens, buffer, &buffer_s);
-                    current_token = get_next_token(tokens, token_number);
+                    buffer = realloc(buffer, (buffer_s + 1) * sizeof(Token *));
+                    if (buffer == NULL)
+                    {
+                        fprintf(stderr, "Fatal: failed to allocate memory.\n");
+                        exit(1);
+                    }
+                    buffer[buffer_s++] = current_token;
+
+                    current_token = get_next_token(tokens, token_number, &cursor);
+
                     if (IS_TYPE(current_token->type))
                     {
-                        append_token(tokens, buffer, &buffer_s);
-                        current_token = get_next_token(tokens, token_number);
+                        buffer = realloc(buffer, (buffer_s + 1) * sizeof(Token *));
+                        if (buffer == NULL)
+                        {
+                            fprintf(stderr, "Fatal: failed to allocate memory.\n");
+                            exit(1);
+                        }
+                        buffer[buffer_s++] = current_token;
+
+                        current_token = get_next_token(tokens, token_number, &cursor);
+
                         if (current_token->type == Equals)
                         {
-                            append_token(tokens, buffer, &buffer_s);
-                            current_token = get_next_token(tokens, token_number);
+                            buffer = realloc(buffer, (buffer_s + 1) * sizeof(Token *));
+                            if (buffer == NULL)
+                            {
+                                fprintf(stderr, "Fatal: failed to allocate memory.\n");
+                                exit(1);
+                            }
+                            buffer[buffer_s++] = current_token;
+
+                            current_token = get_next_token(tokens, token_number, &cursor);
+                            for (int i = 0; i < buffer_s; i++)
+                            {
+                                printf("Token: %s\n", buffer[i]->value);
+                            }
+
                             parse_variable(buffer, buffer_s);
                         }
                         else
                         {
-                            fprintf(stderr, "Error: invalid syntax, you forgot the '=' at the variable declaration %d:%d", current_token->value, current_token->lineNumber, current_token->position);
-                            abort();
+                            fprintf(stderr, "Error: invalid syntax, you forgot the '=' at the variable declaration %d:%d\n", current_token->lineNumber, current_token->position);
+                            exit(1);
                         }
                     }
                     else
                     {
-                        fprintf(stderr, "Error: invalid syntax, %s is not a pointer type %d:%d", current_token->value, current_token->lineNumber, current_token->position);
-                        abort();
-                    }
-                }
-                else if (IS_TYPE(current_token->type))
-                {
-                    append_token(tokens, buffer, &buffer_s);
-                    current_token = get_next_token(tokens, token_number);
-                    if (current_token->type == Equals)
-                    {
-                        append_token(tokens, buffer, &buffer_s);
-                        current_token = get_next_token(tokens, token_number);
-                        parse_variable(buffer, buffer_s);
-                    }
-                    else
-                    {
-                        fprintf(stderr, "Error: invalid syntax, you forgot the '=' at the variable declaration %d:%d", current_token->value, current_token->lineNumber, current_token->position);
-                        abort();
+                        fprintf(stderr, "Error: invalid syntax, %s is not a valid pointer type %d:%d\n", current_token->value, current_token->lineNumber, current_token->position);
+                        exit(1);
                     }
                 }
                 else
                 {
-                    fprintf(stderr, "Error: invalid syntax, %s is not a type %d:%d", current_token->value, current_token->lineNumber, current_token->position);
-                    abort();
+                    fprintf(stderr, "Error: missing '*' after the colon %d:%d\n", current_token->lineNumber, current_token->position);
+                    exit(1);
                 }
             }
             else
             {
-                fprintf(stderr, "Your forgot to add a colon after the identifier at %d:%d", current_token->lineNumber, current_token->position);
-                abort();
+                fprintf(stderr, "Error: missing colon after the identifier %d:%d\n", current_token->lineNumber, current_token->position);
+                exit(1);
             }
         }
         else
         {
-            fprintf(stderr, "Not a valid identifier at %d:%d", current_token->lineNumber, current_token->position);
-            abort();
+            fprintf(stderr, "Error: not a valid identifier %d:%d\n", current_token->lineNumber, current_token->position);
+            exit(1);
         }
     }
     else
     {
+        // Handle other cases if needed
     }
+
+    return ast;
 }
