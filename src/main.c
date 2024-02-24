@@ -283,45 +283,6 @@ void free_tokens(Token **tokens, int numTokens)
     }
 }
 
-void print_ast(Node *ast, int level)
-{
-    if (strcmp(ast->label, "Root") == 0)
-    {
-        printf("\nNode: %s\n", ast->label);
-    }
-
-    for (int i = 0; i < ast->branch_count; i++)
-    {
-        // Print indentation
-        for (int j = 0; j < level; j++)
-        {
-            printf("\t");
-        }
-
-        if (ast->children[i]->type == INITIALIZE_VARIABLE_NODE)
-        {
-            printf("Node: %s,\n", ast->children[i]->label);
-            for (int j = 0; j <= level; j++)
-            {
-                printf("\t");
-            }
-            printf("identifier: %s,\n", ast->children[i]->data.variable.identifier);
-        }
-        else if (ast->children[i]->type == NUMBER_VALUE)
-        {
-            printf("Node: %s,\n", ast->children[i]->label);
-            for (int j = 0; j <= level; j++)
-            {
-                printf("\t");
-            }
-            printf("value: %s", ast->children[i]->data.value.value);
-        }
-
-        // Recursively print children with increased indentation
-        print_ast(ast->children[i], level + 1);
-    }
-}
-
 int main(int argc, char const *argv[])
 {
 
@@ -331,13 +292,21 @@ int main(int argc, char const *argv[])
     Node *ast = malloc(sizeof(Node));
     malloc_error(ast);
     ast->branch_count = 0;
-    ast->children = 0;
     ast->line = 0;
     ast->start_position = 0;
-    ast->type = ROOT,
+    ast->type = ROOT;
     // ast->value = malloc(sizeof(char));
-        ast->label = strdup("Root");
-    ast->children = NULL;
+    ast->label = strdup("Root");
+
+    ast->children = malloc(sizeof(Node *));
+
+    ast->table = (Symbol *)malloc(sizeof(Symbol));
+    if (ast->table == NULL)
+    {
+        fprintf(stderr, "Error: unexpected token type encountered\n");
+        exit(1); // or handle the error appropriately
+    }
+    ast->nb_var = 0;
 
     int cursor = 0;
 
@@ -354,7 +323,7 @@ int main(int argc, char const *argv[])
             parse(tokens, num_tokens, ast, &cursor);
             print_ast(ast, 0);
             // printTokens(tokens, num_tokens);
-            // free(fileContent);
+            //  free(fileContent);
             free_tokens(tokens, num_tokens);
         }
         free(filepath);

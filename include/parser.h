@@ -31,13 +31,6 @@ typedef struct
 
 } pointer_node;
 
-struct symbol_tab
-{
-    struct Node *variable;
-    struct Node *pointer;
-    size_t sym_count;
-};
-
 typedef enum
 {
     ROOT,
@@ -67,6 +60,14 @@ typedef enum
     Boolean_type,
 } ValueType;
 
+typedef enum
+{
+    GLOBAL_SCOPE,
+    FUNCTION_SCOPE,
+    FOR_LOOP_SCOPE,
+    LOOP_SCOPE
+} Scope;
+
 typedef struct
 {
     ValueType value_type;
@@ -85,7 +86,19 @@ typedef struct
     struct Node *referenced_variable;
 
 } PointerNode;
+typedef struct Symbol
+{
+    char *identifier;
+    union
+    {
+        struct Node *variable;
+        struct Node *pointer;
+    } data;
 
+    NodeType type;
+    Scope scope;
+    // You can add more fields as needed
+} Symbol;
 typedef struct Node
 {
     char *label;
@@ -101,9 +114,12 @@ typedef struct Node
     u_int32_t line;
     u_int32_t start_position;
     u_int32_t end_position;
+    Symbol *table;
+    size_t nb_var;
 
 } Node;
 
+void print_ast(Node *ast, int level);
 void malloc_error(Node *p);
 Node *parse(Token **tokens, int token_number, Node *ast, int *cursor);
 void print_buffer(int buffer_s, Token **buffer);
