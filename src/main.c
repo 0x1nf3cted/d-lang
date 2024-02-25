@@ -3,6 +3,7 @@
 
 #include "lexer.h"
 #include "parser.h"
+#include "gen.h"
 
 char *read_file(char *filePath)
 {
@@ -262,6 +263,49 @@ char *get_token_type(TokenType type)
     return typeString;
 }
 
+void *ext_file_name(char *fn, char *filepath)
+{
+    if (filepath == NULL || *filepath == '\0')
+    {
+        return NULL; // Handle null or empty string input
+    }
+
+    const char *filename = strrchr(filepath, '/'); // Find the last occurrence of '/'
+    if (filename == NULL)
+    {
+        filename = strrchr(filepath, '\\'); // If not found, find the last occurrence of '\'
+    }
+
+    if (filename != NULL)
+    { // If found, move past the slash
+        filename++;
+    }
+    else
+    {
+        filename = filepath; // If no slash or backslash found, use the entire filepath as filename
+    }
+    char buffer[1024];
+
+    // Find the last occurrence of '.' to remove the existing extension
+    char *ext = strrchr(filename, '.');
+    if (ext != NULL)
+    {
+        *ext = '\0'; // Null-terminate the string at the '.' to remove the existing extension
+    }
+
+    // Add ".asm" extension
+
+    if (strlen(filename) + 5 >= 1024)
+    {
+        fprintf(stderr, "Filename is too long\n");
+        return NULL;
+    }
+
+    strcpy(buffer, filename); // Copy filename to buffer
+    strcat(buffer, ".asm");   // Append ".asm" extension
+
+    strcpy(fn, buffer);
+}
 void printTokens(Token **tokens, int numTokens)
 {
     for (int i = 0; i < numTokens; i++)
@@ -307,23 +351,24 @@ int main(int argc, char const *argv[])
         exit(1); // or handle the error appropriately
     }
     ast->nb_var = 0;
-
     int cursor = 0;
-
+    char *filename;
     if (argc >= 2)
     {
         filepath = malloc(sizeof(strlen(argv[1]) + 4));
         strcpy(filepath, argv[1]);
         fileContent = read_file_content(filepath, &numLines);
-        free(filepath);
         if (fileContent != NULL)
         {
             int num_tokens;
             Token **tokens = tokenize(fileContent, numLines, &num_tokens);
             parse(tokens, num_tokens, ast, &cursor);
-            print_ast(ast, 0);
-            // printTokens(tokens, num_tokens);
-            //  free(fileContent);
+            // print_ast(ast, 0);
+            ext_file_name(filename, filepath);
+            gen_asm(filename);
+
+            //  printTokens(tokens, num_tokens);
+            free(fileContent);
             free_tokens(tokens, num_tokens);
         }
         free(filepath);

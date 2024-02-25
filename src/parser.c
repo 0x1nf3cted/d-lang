@@ -11,6 +11,66 @@ void malloc_error(Node *p)
     }
 }
 
+// TODO: check the type of the value at variable init
+
+// should check if the referenced variable is valid and does exist
+
+ValueType get_value_type(Token *type)
+{
+    if (strcmp(type->value, "u8") == 0)
+    {
+        return UnsignedInteger_8;
+    }
+    else if (strcmp(type->value, "u16") == 0)
+    {
+        return UnsignedInteger_16;
+    }
+    else if (strcmp(type->value, "u32") == 0)
+    {
+        return UnsignedInteger_32;
+    }
+    else if (strcmp(type->value, "u64") == 0)
+    {
+        return UnsignedInteger_64;
+    }
+    else if (strcmp(type->value, "u128") == 0)
+    {
+        return UnsignedInteger_128;
+    }
+    else if (strcmp(type->value, "i8") == 0)
+    {
+        return SignedInteger_8;
+    }
+    else if (strcmp(type->value, "i16") == 0)
+    {
+        return SignedInteger_16;
+    }
+    else if (strcmp(type->value, "i32") == 0)
+    {
+        return SignedInteger_32;
+    }
+    else if (strcmp(type->value, "i64") == 0)
+    {
+        return SignedInteger_64;
+    }
+    else if (strcmp(type->value, "i128") == 0)
+    {
+        return SignedInteger_128;
+    }
+    else if (strcmp(type->value, "char") == 0)
+    {
+        return Char_type;
+    }
+    else if (strcmp(type->value, "str") == 0)
+    {
+        return String_type;
+    }
+    else if (strcmp(type->value, "bool") == 0)
+    {
+        return Boolean_type;
+    }
+}
+
 Node *symbol_table_lookup(Node *ast, char *identifier, NodeType type)
 {
     for (int i = 0; i < ast->nb_var; i++)
@@ -59,7 +119,7 @@ Node *parse_value(Token **var_tokens, int buffer_size, Node *ast, int *cursor)
         val_node->data.value.value_type = UnsignedInteger_8;
         val_node->label = strdup("Variable reference value");
         Node *ref_var = symbol_table_lookup(ast, var_tokens[1]->value, VARIABLE_NODE);
-        
+
         return ref_var;
     }
     else
@@ -97,6 +157,8 @@ Node *parse_variable(Token **tokens, int token_number, Token **var_tokens, int b
         ast->table[ast->nb_var - 1].identifier = strdup(var_tokens[1]->value);
         ast->table[ast->nb_var - 1].type = INITIALIZE_VARIABLE_NODE;
         ast->table[ast->nb_var - 1].data.variable = var_node;
+
+        var_node->data.variable.value_type = get_value_type(var_tokens[3]);
     }
     else if (var_tokens[0]->type == Identifier)
     {
@@ -336,7 +398,6 @@ Node *parse(Token **tokens, int token_number, Node *ast, int *cursor)
                             }
                             ast->children[ast->branch_count] = parse_pointer(tokens, token_number, buffer, buffer_s, ast, cursor);
                             ast->branch_count += 1;
-                            printf("children number after ptr: %d\n", ast->branch_count);
 
                             // Parse the next tokens
                             parse(tokens, token_number, ast, cursor);
@@ -493,34 +554,32 @@ void print_ast(Node *ast, int level)
     {
         if (ast->children[i] && ast->children[i]->type == INITIALIZE_VARIABLE_NODE)
         {
-            printf("Node: %s,\n", ast->children[i]->label);
             for (int j = 0; j <= level; j++)
             {
                 printf("\t");
             }
-            printf("identifier: %s,\n", ast->children[i]->data.variable.identifier);
+            printf("Node: %s, identifier: %s, value type: %d\n", ast->children[i]->label, ast->children[i]->data.variable.identifier, ast->children[i]->data.variable.value_type);
             print_ast(ast->children[i], level + 1);
         }
         else if (ast->children[i] && ast->children[i]->type == NUMBER_VALUE)
         {
-            printf("Node: %s,\n", ast->children[i]->label);
             for (int j = 0; j <= level; j++)
             {
                 printf("\t");
             }
-            printf("value: %s\n", ast->children[i]->data.value.value);
+            printf("Node: %s, value: %s, value type: %d\n", ast->children[i]->label, ast->children[i]->data.value.value, ast->children[i]->data.value.value_type);
         }
         else if (ast->children[i] && ast->children[i]->type == INITIALIZE_POINTER_NODE)
         {
-            printf("Node: %s,\n", ast->children[i]->label);
             for (int j = 0; j <= level; j++)
             {
                 printf("\t");
             }
             if (ast->children[i]->data.pointer.referenced_variable != NULL)
             {
-                printf("identifier: %s, referenced variable: %s",
-                       ast->children[i]->data.pointer.identifier, ast->children[i]->data.pointer.referenced_variable->data.variable.identifier);
+                printf("Node: %s, identifier: %s, referenced variable value: %s, referenced variable value type: %d\n", ast->children[i]->label,
+                       ast->children[i]->data.pointer.identifier, ast->children[i]->data.pointer.referenced_variable->data.variable.identifier, ast->children[i]->data.pointer.referenced_variable->data.variable.value_type);
+                print_ast(ast->children[i]->data.pointer.referenced_variable, level + 1);
             }
             else
             {
