@@ -383,12 +383,6 @@ Node *parse(Token **tokens, int token_number, Node *ast, int *cursor)
                             }
                             buffer[buffer_s++] = current_token;
 
-                            // Print buffer contents
-                            for (int i = 0; i < buffer_s; i++)
-                            {
-                                printf("Token: %s\n", buffer[i]->value);
-                            }
-
                             // Reallocate memory for ast->children
                             ast->children = realloc(ast->children, (ast->branch_count + 1) * sizeof(Node *));
                             if (ast->children == NULL)
@@ -436,11 +430,6 @@ Node *parse(Token **tokens, int token_number, Node *ast, int *cursor)
                             exit(1);
                         }
                         buffer[buffer_s++] = current_token;
-
-                        for (int i = 0; i < buffer_s; i++)
-                        {
-                            printf("Token: %s\n", buffer[i]->value);
-                        }
 
                         ast->children = realloc(ast->children, (ast->branch_count + 1) * sizeof(Node *));
                         if (ast->children == NULL)
