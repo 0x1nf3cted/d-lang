@@ -1,4 +1,4 @@
-set a : u8 = 15;
+set a : u8 = 12;
 set n : *u8 = &a;
 
 exit(a);

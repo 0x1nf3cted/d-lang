@@ -158,14 +158,15 @@ Node *parse_system_call(Token **tokens, int token_number, Token **var_tokens, in
         abort();
     }
     // Parse function arguments
-for (int i = 1; i < buffer_size; i++) {
-    if (var_tokens[i]->type != Comma) {
-        printf("res: %s\n", var_tokens[i]->value);
+    for (int i = 1; i < buffer_size; i++)
+    {
+        if (var_tokens[i]->type != Comma)
+        {
 
-        function_node->data.function_call.args[function_node->data.function_call.number_args] = parse_value(&var_tokens[i], buffer_size - i, ast);
-        function_node->data.function_call.number_args += 1;
+            function_node->data.function_call.args[function_node->data.function_call.number_args] = parse_value(&var_tokens[i], buffer_size - i, ast);
+            function_node->data.function_call.number_args += 1;
+        }
     }
-}
 
     return function_node;
 }
@@ -200,7 +201,6 @@ Node *parse_value(Token **var_tokens, int buffer_size, Node *ast)
         break;
 
     case Identifier:
-        printf("res: %s", var_tokens[0]->value);
         val_node->type = FUNCTION_CALL_ARGUMENT_NODE;
         val_node->data.value.value = strdup(var_tokens[0]->value);
         val_node->data.value.value_type = UnsignedInteger_8; // for now
@@ -686,7 +686,7 @@ void print_ast(Node *ast, int level)
             }
 
             printf("Number of arguments: %d\n", ast->children[i]->data.function_call.number_args);
-             for (int k = 0; k < ast->children[i]->data.function_call.number_args; k++)
+            for (int k = 0; k < ast->children[i]->data.function_call.number_args; k++)
             {
                 printf("\targ: %s\n", ast->children[i]->data.function_call.args[k]->data.variable.identifier);
             }
