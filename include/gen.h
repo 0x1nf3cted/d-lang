@@ -22,5 +22,5 @@ const char *label_name();
 
 void gen_asm(const char *filename, Node *ast);
 void gen_code(FILE *file, Node *ast);
-
+void gen_variable_code(FILE *file, Node *ast);
 #endif // GEN_H

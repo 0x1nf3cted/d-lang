@@ -1,2 +1,5 @@
 set a : u8 = 10;
 set n : *u8 = &a;
+
+
+exit(a);

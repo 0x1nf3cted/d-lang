@@ -29,7 +29,7 @@ void gen_variable_code(FILE *file, Node *ast)
     }
     fprintf(file, "%s: \n", ast->data.variable.identifier);
     fprintf(file, "\t%s %s\n", asm_type, ast->children[0]->data.value.value);
-    printf_variable(file, ast->data.variable.identifier);
+    // printf_variable(file, ast->data.variable.identifier);
 
 }
 

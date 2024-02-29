@@ -85,6 +85,7 @@ typedef enum
     FunctionKeword,
     For,
     VariableDefinition,
+    ExitSystemcall,
     Case,
     If,
     Else,
@@ -136,6 +137,7 @@ typedef struct
 #define IS_KEYWORD(CH) (           \
     strcmp(CH, "get") == 0 ||      \
     strcmp(CH, "type") == 0 ||     \
+    strcmp(CH, "exit") == 0 ||     \
     strcmp(CH, "fn") == 0 ||       \
     strcmp(CH, "with") == 0 ||     \
     strcmp(CH, "match") == 0 ||    \
@@ -153,6 +155,8 @@ typedef struct
     strcmp(CH, "none") == 0 ||     \
     strcmp(CH, "set") == 0)
 
+#define IS_SYSCALL(CH) ( \
+    strcmp(CH, "exit") == 0)
 
 #define IS_TYPE(CH) (           \
     CH == UnsignedInteger8 ||   \

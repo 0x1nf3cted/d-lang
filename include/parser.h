@@ -41,6 +41,8 @@ typedef enum
     POINTER_NODE,
     INITIALIZE_POINTER_NODE,
     INITIALIZE_VARIABLE_NODE,
+    SYSTEM_CALL_NODE,
+    FUNCTION_CALL_ARGUMENT_NODE,
 } NodeType;
 
 typedef enum
@@ -83,6 +85,14 @@ typedef struct
 typedef struct
 {
     char *identifier;
+    int number_args;
+    struct Node **args;
+
+} FunctionCallNode;
+
+typedef struct
+{
+    char *identifier;
     struct Node *referenced_variable;
 
 } PointerNode;
@@ -107,6 +117,8 @@ typedef struct Node
         VariableNode variable;
         ValueNode value;
         PointerNode pointer;
+        FunctionCallNode function_call;
+
     } data;
     NodeType type;
     struct Node **children;
@@ -123,4 +135,7 @@ void print_ast(Node *ast, int level);
 void malloc_error(Node *p);
 Node *parse(Token **tokens, int token_number, Node *ast, int *cursor);
 void print_buffer(int buffer_s, Token **buffer);
+Node *parse_system_call(Token **tokens, int token_number, Token **var_tokens, int buffer_size, Node *ast, int *cursor);
+ValueNode *parse_function_arg(Token *token);
+Node *parse_value(Token **var_tokens, int buffer_size, Node *ast);
 #endif // PARSER_H

@@ -92,8 +92,85 @@ Node *symbol_table_lookup(Node *ast, char *identifier, NodeType type)
     }
     return NULL;
 }
+// Node *parse_function_arg(Token *token)
+// {
+//     if (token->type == Identifier)
+//     {
 
-Node *parse_value(Token **var_tokens, int buffer_size, Node *ast, int *cursor)
+//     }
+//     else
+//     {
+//         Node *arg = (Node *)malloc(sizeof(ValueNode));
+//         if (arg == NULL)
+//         {
+//             fprintf(stderr, "Fatal: failed to allocate memory.\n");
+//             abort();
+//         }
+//         arg->value = strdup(token->value);
+//         if (arg->value == NULL)
+//         {
+//             fprintf(stderr, "Fatal: failed to allocate memory for identifier.\n");
+//             free(arg);
+//             abort();
+//         }
+//         arg->value_type = get_value_type(token);
+//         return arg;
+//     }
+// }
+
+Node *parse_system_call(Token **tokens, int token_number, Token **var_tokens, int buffer_size, Node *ast, int *cursor)
+{
+    Node *function_node = (Node *)malloc(sizeof(Node));
+    if (function_node == NULL)
+    {
+        fprintf(stderr, "Fatal: failed to allocate memory for function_node.\n");
+        abort();
+    }
+    function_node->branch_count = 0;
+    function_node->children = NULL;
+    function_node->line = var_tokens[0]->lineNumber;
+    function_node->start_position = var_tokens[0]->position;
+    function_node->end_position = var_tokens[buffer_size - 1]->position;
+    function_node->type = SYSTEM_CALL_NODE;
+    function_node->label = strdup("System call function");
+    if (function_node->label == NULL)
+    {
+        fprintf(stderr, "Fatal: failed to allocate memory for identifier.\n");
+        free(function_node);
+        abort();
+    }
+    function_node->data.function_call.identifier = strdup(var_tokens[0]->value);
+
+    if (function_node->data.function_call.identifier == NULL)
+    {
+        fprintf(stderr, "Fatal: failed to allocate memory for identifier.\n");
+        free(function_node);
+        abort();
+    }
+    function_node->data.function_call.number_args = 0;
+    // Initialize args array
+    function_node->data.function_call.args = (ValueNode **)malloc(buffer_size * sizeof(ValueNode *));
+    if (function_node->data.function_call.args == NULL)
+    {
+        fprintf(stderr, "Fatal: failed to allocate memory for args array.\n");
+        free(function_node->data.function_call.identifier);
+        free(function_node);
+        abort();
+    }
+    // Parse function arguments
+for (int i = 1; i < buffer_size; i++) {
+    if (var_tokens[i]->type != Comma) {
+        printf("res: %s\n", var_tokens[i]->value);
+
+        function_node->data.function_call.args[function_node->data.function_call.number_args] = parse_value(&var_tokens[i], buffer_size - i, ast);
+        function_node->data.function_call.number_args += 1;
+    }
+}
+
+    return function_node;
+}
+
+Node *parse_value(Token **var_tokens, int buffer_size, Node *ast)
 {
 
     Node *val_node = (Node *)malloc(sizeof(Node));
@@ -103,28 +180,38 @@ Node *parse_value(Token **var_tokens, int buffer_size, Node *ast, int *cursor)
     val_node->line = var_tokens[0]->lineNumber;
     val_node->start_position = var_tokens[0]->position;
     val_node->end_position = var_tokens[buffer_size - 1]->position;
-
-    if (var_tokens[0]->type == Number)
+    switch (var_tokens[0]->type)
     {
+    case Number:
         val_node->type = NUMBER_VALUE;
         val_node->data.value.value = strdup(var_tokens[0]->value);
         val_node->data.value.value_type = UnsignedInteger_8;
         val_node->label = strdup("Litteral value");
         return val_node;
-    }
-    else if (var_tokens[0]->type == Ampersand)
-    {
+        break;
+
+    case Ampersand:
         val_node->type = POINTER_NODE;
         val_node->data.value.value = strdup(var_tokens[1]->value);
         val_node->data.value.value_type = UnsignedInteger_8;
         val_node->label = strdup("Variable reference value");
-        Node *ref_var = symbol_table_lookup(ast, var_tokens[1]->value, VARIABLE_NODE);
+        Node *pointer_ref_var = symbol_table_lookup(ast, var_tokens[1]->value, VARIABLE_NODE);
+        return pointer_ref_var;
+        break;
 
+    case Identifier:
+        printf("res: %s", var_tokens[0]->value);
+        val_node->type = FUNCTION_CALL_ARGUMENT_NODE;
+        val_node->data.value.value = strdup(var_tokens[0]->value);
+        val_node->data.value.value_type = UnsignedInteger_8; // for now
+        val_node->label = strdup("Function call argument");
+        Node *ref_var = symbol_table_lookup(ast, var_tokens[0]->value, VARIABLE_NODE);
         return ref_var;
-    }
-    else
-    {
+        break;
+
+    default:
         printf("Error");
+        break;
     }
 }
 
@@ -479,7 +566,7 @@ Node *parse(Token **tokens, int token_number, Node *ast, int *cursor)
 
         if (current_token->type == SemiColon)
         {
-            return parse_value(buffer, buffer_s, ast, cursor);
+            return parse_value(buffer, buffer_s, ast);
         }
         else
         {
@@ -507,13 +594,52 @@ Node *parse(Token **tokens, int token_number, Node *ast, int *cursor)
 
             buffer[buffer_s++] = current_token;
 
-            return parse_value(buffer, buffer_s, ast, cursor);
+            return parse_value(buffer, buffer_s, ast);
 
             // should add more checks for poiners ect.., for now we suppose the syntax is simple
         }
         else
         {
             fprintf(stderr, "Error: invalid identifier for the pointer assignement %d:%d\n", current_token->lineNumber, current_token->position);
+            exit(1);
+        }
+    }
+    if (current_token->type == ExitSystemcall)
+    {
+        buffer = realloc(buffer, (buffer_s + 1) * sizeof(Token *));
+        if (buffer == NULL)
+        {
+            fprintf(stderr, "Fatal: failed to allocate memory.\n");
+            exit(1);
+        }
+        buffer[buffer_s++] = current_token;
+
+        current_token = get_next_token(tokens, token_number, cursor);
+        if (current_token->type == ParenthesisOpen)
+        {
+            current_token = get_next_token(tokens, token_number, cursor);
+
+            while (current_token->type != ParenthesisClose)
+            {
+                buffer = realloc(buffer, (buffer_s + 1) * sizeof(Token *));
+                if (buffer == NULL)
+                {
+                    fprintf(stderr, "Fatal: failed to allocate memory.\n");
+                    exit(1);
+                }
+                buffer[buffer_s++] = current_token;
+
+                current_token = get_next_token(tokens, token_number, cursor);
+            }
+
+            ast->children[ast->branch_count] = parse_system_call(tokens, token_number, buffer, buffer_s, ast, cursor);
+            ast->branch_count += 1;
+            parse(tokens, token_number, ast, cursor);
+        }
+
+        else
+        {
+            fprintf(stderr, "Error: was waiting for a parenthesis %d:%d\n", current_token->lineNumber, current_token->position);
             exit(1);
         }
     }
@@ -541,6 +667,7 @@ void print_ast(Node *ast, int level)
 
     for (int i = 0; i < ast->branch_count; i++)
     {
+
         if (ast->children[i] && ast->children[i]->type == INITIALIZE_VARIABLE_NODE)
         {
             for (int j = 0; j <= level; j++)
@@ -550,6 +677,21 @@ void print_ast(Node *ast, int level)
             printf("Node: %s, identifier: %s, value type: %d\n", ast->children[i]->label, ast->children[i]->data.variable.identifier, ast->children[i]->data.variable.value_type);
             print_ast(ast->children[i], level + 1);
         }
+        else if (ast->children[i] && ast->children[i]->type == SYSTEM_CALL_NODE)
+        {
+            printf("Node: %s, value: %s\n", ast->children[i]->label, ast->children[i]->data.function_call.identifier);
+            for (int j = 0; j <= level; j++)
+            {
+                printf("\t");
+            }
+
+            printf("Number of arguments: %d\n", ast->children[i]->data.function_call.number_args);
+             for (int k = 0; k < ast->children[i]->data.function_call.number_args; k++)
+            {
+                printf("\targ: %s\n", ast->children[i]->data.function_call.args[k]->data.value.value);
+            }
+        }
+
         else if (ast->children[i] && ast->children[i]->type == NUMBER_VALUE)
         {
             for (int j = 0; j <= level; j++)

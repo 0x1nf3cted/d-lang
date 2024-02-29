@@ -78,6 +78,10 @@ TokenType get_token_kind(char *lexeme, uint16_t length)
     {
         return VariableDefinition;
     }
+    else if (strncmp(lexeme, "exit", length) == 0)
+    {
+        return ExitSystemcall;
+    }
     else
     {
         return Word;
@@ -405,6 +409,10 @@ Token **tokenize(Content **input, int numLines, int *numTokens)
                 TokenType type = Identifier;
                 if (IS_KEYWORD(buffer))
                 {
+                    if (IS_SYSCALL(buffer))
+                    {
+                        type = get_token_kind(buffer, bufferIndex + 1);
+                    }
                     type = get_token_kind(buffer, bufferIndex + 1);
                 }
                 else if (IS_DATATYPE(buffer))
