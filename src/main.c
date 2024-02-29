@@ -367,9 +367,9 @@ int main(int argc, char const *argv[])
             int num_tokens;
             Token **tokens = tokenize(fileContent, numLines, &num_tokens);
             parse(tokens, num_tokens, ast, &cursor);
-            print_ast(ast, 0);
-            //  ext_file_name(filename, filepath);
-            //  gen_asm(filename, ast);
+            //print_ast(ast, 0);
+            ext_file_name(filename, filepath);
+            gen_asm(filename, ast);
             //printTokens(tokens, num_tokens);
             free(fileContent);
             free_tokens(tokens, num_tokens);

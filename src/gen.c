@@ -1,9 +1,11 @@
-
-
 #include "gen.h"
+
+// this is code is just for testing purpouses, so it's not the final version
 
 void gen_variable_code(FILE *file, Node *ast)
 {
+    fprintf(file, "section .data\n"); // Data section for variables
+
     printf("%s: ", ast->data.variable.identifier);
 
     // we suppose it's an integer
@@ -12,48 +14,42 @@ void gen_variable_code(FILE *file, Node *ast)
     switch (ast->children[0]->data.value.value_type)
     {
     case UnsignedInteger_8:
-        asm_type = ".long";
+        asm_type = "dd";
         break;
     case Char_type:
-        asm_type = ".byte";
+        asm_type = "dd";
         break;
     case String_type:
-        asm_type = ".asciz";
+        asm_type = "dd";
         break;
     case Boolean_type:
-        asm_type = ".byte";
+        asm_type = "dd";
         break;
     default:
-        asm_type = ".byte";
+        asm_type = "dd";
         break;
     }
-    fprintf(file, "%s: \n", ast->data.variable.identifier);
-    fprintf(file, "\t%s %s\n", asm_type, ast->children[0]->data.value.value);
+    fprintf(file, "\t%s %s %s\n", ast->data.variable.identifier, asm_type, ast->children[0]->data.value.value);
     // printf_variable(file, ast->data.variable.identifier);
-
 }
-
-// void printf_variable(FILE *file, char *identifier)
-// {
-//     // movl $a, %esi      # Load the address of variable 'a' into the 'esi' register
-//     // movl (%esi), %esi  # Load the value of 'a' into the 'esi' register
-//     // movl $0, %eax      # Clear the %eax register
-//     // call printf        # Call the printf function
-//     fprintf(file, ".section .text\n"); // Text section
-
-//     // Placeholder for generated code
-//     fprintf(file, "_start:\n");
-//     fprintf(file, "\tmovl $%s, %%esi \n", identifier);
-//     fprintf(file, "\tmovl (%%esi), %%esi \n");
-//     fprintf(file, "\tmovl $0, %%eax \n");
-//     fprintf(file, "\tcall printf\n");
-//     fprintf(file, "\tmovq $60, %%rax\n");   // syscall number for sys_exit
-//     fprintf(file, "\txorq %%rdi, %%rdi\n"); // exit code 0
-//     fprintf(file, "\tsyscall\n");           // invoke syscall
-// }
 
 void gen_pointer_code(FILE *file, Node *ast)
 {
+}
+
+void gen_system_call_code(FILE *file, Node *ast)
+{
+    fprintf(file, "_start:\n");
+
+    fprintf(file, "\tmov eax, dword [%s]\n", ast->data.function_call.args[0]->data.variable.identifier); // invoke syscall
+
+    fprintf(file, "\tmov ebx, eax\n");
+    fprintf(file, "\tmov eax, 1\n");
+    fprintf(file, "\tint 0x80\n");
+
+    //     movl %eax, %ebx  # Exit status
+    // movl $60, %eax   # syscall number for exit
+    // int $0x80        # Call kernel
 }
 
 void gen_code(FILE *file, Node *ast)
@@ -64,6 +60,12 @@ void gen_code(FILE *file, Node *ast)
         {
 
             gen_variable_code(file, ast->children[i]);
+        }
+
+        if (ast->children[i] && ast->children[i]->type == SYSTEM_CALL_NODE)
+        {
+
+            gen_system_call_code(file, ast->children[i]);
         }
 
         else if (ast->children[i] && ast->children[i]->type == INITIALIZE_POINTER_NODE)
@@ -85,10 +87,9 @@ void gen_asm(const char *filename, Node *ast)
 
     if (file != NULL)
     {
-        // Write assembly boilerplate to the file
-        fprintf(file, ".global _start\n"); // Entry point symbol
+        fprintf(file, "section .text\n"); // Entry point symbol
 
-        fprintf(file, ".section .data\n"); // Data section for variables
+        fprintf(file, "\tglobal _start\n"); // Entry point symbol
 
         gen_code(file, ast);
 

@@ -688,7 +688,7 @@ void print_ast(Node *ast, int level)
             printf("Number of arguments: %d\n", ast->children[i]->data.function_call.number_args);
              for (int k = 0; k < ast->children[i]->data.function_call.number_args; k++)
             {
-                printf("\targ: %s\n", ast->children[i]->data.function_call.args[k]->data.value.value);
+                printf("\targ: %s\n", ast->children[i]->data.function_call.args[k]->data.variable.identifier);
             }
         }
 

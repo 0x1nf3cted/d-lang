@@ -2,12 +2,21 @@
 
 cd build && cmake .. && make && ./dzair ../vars.dz && sleep 1
 
+
+# for AT&T syntax
 # as -o vars.o vars.asm
 # ld -o vars vars.o
 
-#rm vars.o
-#rm vars.asm
 
-#cd ..
+nasm -f elf vars.asm -o vars.o
+ld -m elf_i386 vars.o -o vars
 
-#mv build/vars .
+
+rm vars.o
+rm vars.asm
+
+cd ..
+
+mv build/vars .
+
+./vars
