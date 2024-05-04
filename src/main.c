@@ -2,8 +2,6 @@
 #define _GNU_SOURCE
 
 #include "lexer.h"
-#include "parser.h"
-#include "gen.h"
 
 char *read_file(char *filePath)
 {
@@ -337,24 +335,7 @@ int main(int argc, char const *argv[])
     char *filepath;
     int numLines;
     Content **fileContent;
-    Node *ast = malloc(sizeof(Node));
-    malloc_error(ast);
-    ast->branch_count = 0;
-    ast->line = 0;
-    ast->start_position = 0;
-    ast->type = ROOT;
-    // ast->value = malloc(sizeof(char));
-    ast->label = strdup("Root");
 
-    ast->children = malloc(sizeof(Node *));
-
-    ast->table = (Symbol *)malloc(sizeof(Symbol));
-    if (ast->table == NULL)
-    {
-        fprintf(stderr, "Error: unexpected token type encountered\n");
-        exit(1); // or handle the error appropriately
-    }
-    ast->nb_var = 0;
     int cursor = 0;
     char *filename;
     if (argc >= 2)
@@ -366,11 +347,8 @@ int main(int argc, char const *argv[])
         {
             int num_tokens;
             Token **tokens = tokenize(fileContent, numLines, &num_tokens);
-            parse(tokens, num_tokens, ast, &cursor);
-            //print_ast(ast, 0);
-            ext_file_name(filename, filepath);
-            gen_asm(filename, ast);
-            //printTokens(tokens, num_tokens);
+
+            printTokens(tokens, num_tokens);
             free(fileContent);
             free_tokens(tokens, num_tokens);
         }
